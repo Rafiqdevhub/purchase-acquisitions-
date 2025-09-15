@@ -9,25 +9,25 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     env:
       NODE_ENV: test
       NODE_OPTIONS: --experimental-vm-modules
       DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'postgres://test:test@localhost:5432/test_db' }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run tests
         id: test-run
         run: |
@@ -35,24 +35,24 @@ jobs:
           npm test -- --coverage --verbose --testResultsProcessor=jest-junit
           TEST_EXIT_CODE=$?
           set -e
-          
+
           if [ $TEST_EXIT_CODE -ne 0 ]; then
             echo "::error title=Test Failures::Some tests failed. Please check the test results and fix the failing tests."
             echo "test_failed=true" >> $GITHUB_OUTPUT
           else
             echo "test_failed=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check if coverage directory exists
           if [ -d "coverage" ]; then
             echo "coverage_exists=true" >> $GITHUB_OUTPUT
           else
             echo "coverage_exists=false" >> $GITHUB_OUTPUT
           fi
-          
+
           exit $TEST_EXIT_CODE
         continue-on-error: true
-        
+
       - name: Upload coverage reports
         if: steps.test-run.outputs.coverage_exists == 'true'
         uses: actions/upload-artifact@v4
@@ -60,13 +60,13 @@ jobs:
           name: coverage-reports
           path: coverage/
           retention-days: 30
-          
+
       - name: Generate step summary
         if: always()
         run: |
           echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ steps.test-run.outputs.test_failed }}" = "true" ]; then
             echo "❌ **Tests Failed**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -76,9 +76,9 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "All tests executed successfully!" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ steps.test-run.outputs.coverage_exists }}" = "true" ]; then
             echo "📊 **Coverage Report**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -88,7 +88,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "No coverage reports were generated." >> $GITHUB_STEP_SUMMARY
           fi
-          
+
       - name: Fail job if tests failed
         if: steps.test-run.outputs.test_failed == 'true'
         run: exit 1
