@@ -7,6 +7,7 @@ import cors from 'cors';
 import authRoutes from '#routes/auth.routes.js';
 import usersRoutes from '#routes/users.routes.js';
 import securityMiddleware from '#middleware/security.middleware.js';
+import client from 'prom-client';
 
 const app = express();
 app.use(helmet());
@@ -20,6 +21,9 @@ app.use(
   })
 );
 app.use(securityMiddleware);
+
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({ timeout: 5000 });
 
 app.get('/', (req, res) => {
   logger.info('Hello from Purchase!...');
@@ -36,6 +40,15 @@ app.get('/health', (req, res) => {
 
 app.get('/api', (req, res) => {
   res.status(200).json({ message: 'Purchase API is running!' });
+});
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
 });
 
 app.use('/api/auth', authRoutes);
