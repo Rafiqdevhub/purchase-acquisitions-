@@ -42,6 +42,18 @@ docker run -d \
   -e ARCJET_KEY='your-arcjet-api-key' \
   -v $(pwd)/logs:/app/logs \
   rafiq9323/acquisitions-purchase:latest
+
+# For window use this command in powershell
+docker run -d `
+  --name purchase-api `
+  -p 5000:5000 `
+  -e NODE_ENV=production `
+  -e DATABASE_URL="p" `
+  -e JWT_SECRET="your-secure-jwt-secret" `
+  -e ARCJET_KEY="" `
+  -v ${PWD}\logs:/app/logs `
+  rafiq9323/acquisitions-purchase:latest
+
 ```
 
 ### Option 2: Using Docker Compose (Recommended)
